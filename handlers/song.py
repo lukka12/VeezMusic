@@ -25,6 +25,16 @@ from helpers.decorators import humanbytes
 from helpers.filters import command
 
 
+ydl_opts = {
+        'format':'best',
+        'keepvideo':True,
+        'prefer_ffmpeg':False,
+        'geo_bypass':True,
+        'outtmpl':'%(title)s.%(ext)s',
+        'quite':True
+}
+
+
 @Client.on_message(command(["song", f"song@{bn}"]) & ~filters.edited)
 def song(_, message):
     query = " ".join(message.command[1:])
@@ -41,20 +51,21 @@ def song(_, message):
         duration = results[0]["duration"]
 
     except Exception as e:
-        m.edit("❌ **song not found.**\n\n» **please give a valid song name.**")
+        m.edit("❌ song not found.\n\nplease give a valid song name.")
         print(str(e))
         return
     m.edit("📥 downloading...")
     try:
-        with youtube_dl.YoutubeDL(ydl_ops) as ydl:
+        with yt_dlp.YoutubeDL(ydl_ops) as ydl:
             info_dict = ydl.extract_info(link, download=False)
             audio_file = ydl.prepare_filename(info_dict)
             ydl.process_info(info_dict)
-        rep = f"🎧 **Uploader @{bn}**"
+        rep = f"**🎧 Uploader @{bn}**"
         secmul, dur, dur_arr = 1, 0, duration.split(":")
         for i in range(len(dur_arr) - 1, -1, -1):
             dur += int(float(dur_arr[i])) * secmul
             secmul *= 60
+        m.edit("📤 uploading...")
         message.reply_audio(
             audio_file,
             caption=rep,
@@ -65,7 +76,7 @@ def song(_, message):
         )
         m.delete()
     except Exception as e:
-        m.edit("❌ error, wait for bot owner to fix")
+        m.edit("❌ error, wait for dev to fix")
         print(e)
 
     try:
@@ -182,19 +193,6 @@ def time_formatter(milliseconds: int) -> str:
     return tmp[:-2]
 
 
-ydl_opts = {
-    "format": "bestaudio[ext=m4a]",
-    "writethumbnail": True,
-    "postprocessors": [
-        {
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }
-    ],
-}
-
-
 def get_file_extension_from_url(url):
     url_path = urlparse(url).path
     basename = os.path.basename(url_path)
@@ -210,9 +208,6 @@ async def download_song(url):
                 await f.write(await resp.read())
                 await f.close()
     return song_name
-
-
-is_downloading = False
 
 
 def time_to_seconds(times):
@@ -267,3 +262,20 @@ async def vsong(client, message):
         await msg.delete()
     except Exception as e:
         print(e)
+
+
+@Client.on_message(command(["lyric", f"lyric@{bn}"]))
+async def lyrics(_, message):
+    try:
+        if len(message.command) < 2:
+            await message.reply_text("» **give a lyric name too.**")
+            return
+        query = message.text.split(None, 1)[1]
+        rep = await message.reply_text("🔎 **searching lyrics...**")
+        resp = requests.get(
+            f"https://api-tede.herokuapp.com/api/lirik?l={query}"
+        ).json()
+        result = f"{resp['data']}"
+        await rep.edit(result)
+    except Exception:
+        await rep.edit("❌ **lyrics not found.**\n\n» **please give a valid song name.**")

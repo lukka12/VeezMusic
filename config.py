@@ -18,6 +18,7 @@ BG_IMAGE = getenv("BG_IMAGE", "https://telegra.ph/file/20147c4f049e2c1f2f248.png
 THUMB_IMG = getenv("THUMB_IMG", "https://telegra.ph/file/4c39fbb88932761913fff.png")
 AUD_IMG = getenv("AUD_IMG", "https://telegra.ph/file/73e10ed6e2bd32b478de6.png")
 QUE_IMG = getenv("QUE_IMG", "https://telegra.ph/file/b95c13eef1ebd14dbb458.png")
+ALIVE_IMG = getenv("ALIVE_IMG", "https://telegra.ph/file/c83b000f004f01897fe18.png")
 API_ID = int(getenv("API_ID"))
 API_HASH = getenv("API_HASH")
 BOT_USERNAME = getenv("BOT_USERNAME", "veezmusicbot")
@@ -26,6 +27,8 @@ GROUP_SUPPORT = getenv("GROUP_SUPPORT", "VeezSupportGroup")
 UPDATES_CHANNEL = getenv("UPDATES_CHANNEL", "levinachannel")
 # isi dengan username kamu tanpa simbol @
 OWNER_NAME = getenv("OWNER_NAME", "dlwrml")
+# fill with your nickname
+ALIVE_NAME = getenv("ALIVE_NAME", "Levina")
 # fill with your id as the owner of the bot
 OWNER_ID = int(os.environ.get("OWNER_ID"))
 DATABASE_URL = os.environ.get("DATABASE_URL")  # fill with your mongodb url

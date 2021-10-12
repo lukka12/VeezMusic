@@ -1,12 +1,24 @@
-from datetime import datetime
+import os
 from time import time
+from sys import version_info
+from datetime import datetime
 
 from pyrogram import Client, filters
+from pyrogram import __version__ as __pyro_version__
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from config import BOT_NAME, BOT_USERNAME, GROUP_SUPPORT, OWNER_NAME, UPDATES_CHANNEL
+from config import BOT_NAME, BOT_USERNAME, GROUP_SUPPORT, OWNER_NAME, UPDATES_CHANNEL, ALIVE_NAME, ALIVE_IMG
 from helpers.decorators import sudo_users_only
 from helpers.filters import command
+from handlers import __version__
+
+
+__major__ = 0
+__minor__ = 2
+__micro__ = 1
+
+__python_version__ = f"{version_info[0]}.{version_info[1]}.{version_info[2]}"
+
 
 START_TIME = datetime.utcnow()
 START_TIME_ISO = START_TIME.replace(microsecond=0).isoformat()
@@ -35,13 +47,12 @@ async def _human_time_duration(seconds):
 )
 async def start_(client: Client, message: Message):
     await message.reply_text(
-        f"""<b>✨ **Welcome {message.from_user.mention} !** \n
+        f"""✨ **Welcome {message.from_user.mention} !**\n
 💭 **[{BOT_NAME}](https://t.me/{BOT_USERNAME}) allows you to play music on groups through the new Telegram's voice chats!**
 
 💡 **Find out all the Bot's commands and how they work by clicking on the » 📚 Commands button!**
 
-❔ **To know how to use this bot, please click on the » ❓ Basic Guide button!**
-</b>""",
+❔ **To know how to use this bot, please click on the » ❓ Basic Guide button!**""",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -81,9 +92,8 @@ async def start(client: Client, message: Message):
     current_time = datetime.utcnow()
     uptime_sec = (current_time - START_TIME).total_seconds()
     uptime = await _human_time_duration(int(uptime_sec))
-    await message.reply_text(
-        f"""✅ **bot is running**\n<b>💠 **uptime:**</b> `{uptime}`""",
-        reply_markup=InlineKeyboardMarkup(
+    
+    keyboard=InlineKeyboardMarkup(
             [
                 [
                     InlineKeyboardButton(
@@ -94,7 +104,14 @@ async def start(client: Client, message: Message):
                     ),
                 ]
             ]
-        ),
+    )
+    
+    alive = f"**Hello {message.from_user.mention}, i'm {BOT_NAME}**\n\n✨ Bot is working normally\n🍀 My Master: [{ALIVE_NAME}](https://t.me/{OWNER_NAME})\n✨ Bot Version: `v{__version__}`\n🍀 Pyrogram Version: `{__pyro_version__}`\n✨ Python Version: `{__python_version__}`\n🍀 Uptime Status: `{uptime}`\n\n**Thanks for Adding me here, for playing music on your Group voice chat** ❤"
+    
+    await message.reply_photo(
+        photo=f"{ALIVE_IMG}",
+        caption=alive,
+        reply_markup=keyboard,
     )
 
 
@@ -103,9 +120,9 @@ async def start(client: Client, message: Message):
 )
 async def help(client: Client, message: Message):
     await message.reply_text(
-        f"""<b>👋🏻 **Hello** {message.from_user.mention()}</b>
+        f"""✨ **Hello** {message.from_user.mention()}!
 
-**Please press the button below to read the explanation and see the list of available commands !**
+» **press the button below to read the explanation and see the list of available commands !**
 
 ⚡ __Powered by {BOT_NAME} A.I__""",
         reply_markup=InlineKeyboardMarkup(
@@ -119,9 +136,9 @@ async def help(client: Client, message: Message):
 )
 async def help_(client: Client, message: Message):
     await message.reply_text(
-        f"""<b>💡 Hello {message.from_user.mention} welcome to the help menu !</b>
+        f"""✨ **Hello {message.from_user.mention}!**
 
-**in this menu you can open several available command menus, in each command menu there is also a brief explanation of each command**
+» **through this menu panel you can press one of the buttons below to read the explanation of each drill command**
 
 ⚡ __Powered by {BOT_NAME} A.I__""",
         reply_markup=InlineKeyboardMarkup(
@@ -135,7 +152,6 @@ async def help_(client: Client, message: Message):
                     InlineKeyboardButton("📗 Sudo Cmd", callback_data="cbsudo"),
                 ],
                 [InlineKeyboardButton("📙 Owner Cmd", callback_data="cbowner")],
-                [InlineKeyboardButton("📔 Fun Cmd", callback_data="cbfun")],
             ]
         ),
     )

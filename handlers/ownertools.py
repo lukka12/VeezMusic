@@ -1,17 +1,12 @@
 import os
 import shutil
 import sys
-import heroku3
 import traceback
 from functools import wraps
 from os import environ, execle
 
+import heroku3
 import psutil
-from git import Repo
-from git.exc import GitCommandError, InvalidGitRepositoryError
-from pyrogram import Client, filters
-from pyrogram.types import Message
-
 from config import (
     BOT_USERNAME,
     GROUP_SUPPORT,
@@ -22,11 +17,16 @@ from config import (
     U_BRANCH,
     UPSTREAM_REPO,
 )
+from git import Repo
+from git.exc import GitCommandError, InvalidGitRepositoryError
 from handlers.song import get_text, humanbytes
-from helpers.filters import command
+from handlers import __version__
 from helpers.database import db
 from helpers.dbtools import main_broadcast_handler
 from helpers.decorators import sudo_users_only
+from helpers.filters import command
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
 
 # Stats Of Your Bot
@@ -42,7 +42,7 @@ async def botstats(_, message: Message):
     disk_usage = psutil.disk_usage("/").percent
     total_users = await db.total_users_count()
     await message.reply_text(
-        text=f"**📊 stats of @{BOT_USERNAME}** \n\n**🤖 bot version:** `v6.8` \n\n**🙎🏼 total users:** \n » **on bot pm:** `{total_users}` \n\n**💾 disk usage:** \n » **disk space:** `{total}` \n » **used:** `{used}({disk_usage}%)` \n » **free:** `{free}` \n\n**🎛 hardware usage:** \n » **CPU usage:** `{cpu_usage}%` \n » **RAM usage:** `{ram_usage}%`",
+        text=f"**📊 stats of @{BOT_USERNAME}** \n\n**🤖 bot version:** `{__version__}` \n\n**🙎🏼 total users:** \n » **on bot pm:** `{total_users}` \n\n**💾 disk usage:** \n » **disk space:** `{total}` \n » **used:** `{used}({disk_usage}%)` \n » **free:** `{free}` \n\n**🎛 hardware usage:** \n » **CPU usage:** `{cpu_usage}%` \n » **RAM usage:** `{ram_usage}%`",
         parse_mode="Markdown",
         quote=True,
     )
@@ -71,11 +71,11 @@ async def ban(c: Client, m: Message):
         user_id = int(m.command[1])
         ban_duration = m.command[2]
         ban_reason = " ".join(m.command[3:])
-        ban_log_text = f"🔁 banning user... \n\nuser id: `{user_id}` \nduration: `{ban_duration}` \nreason: `{ban_reason}`"
+        ban_log_text = f"🚷 **banned user !** \n\nuser id: `{user_id}` \nduration: `{ban_duration}` \nreason: `{ban_reason}`"
         try:
             await c.send_message(
                 user_id,
-                f"sorry, you're banned!** \n\nreason: `{ban_reason}` \nduration: `{ban_duration}` day(s). \n\n**💬 message from owner: ask in @{GROUP_SUPPORT} if you think this was an mistake.",
+                f"😕 sorry, you're banned!** \n\nreason: `{ban_reason}` \nduration: `{ban_duration}` day(s). \n\n**💬 message from owner: ask in @{GROUP_SUPPORT} if you think this was an mistake.",
             )
             ban_log_text += "\n\n✅ this notification was sent to that user"
         except:
@@ -93,9 +93,8 @@ async def ban(c: Client, m: Message):
 
 
 # Unblock User
-@Client.on_message(
-    filters.private & filters.command("unblock") & filters.user(OWNER_ID)
-)
+@Client.on_message(filters.private & filters.command("unblock"))
+@sudo_users_only
 async def unban(c: Client, m: Message):
     if len(m.command) == 1:
         await m.reply_text(
@@ -104,7 +103,7 @@ async def unban(c: Client, m: Message):
         return
     try:
         user_id = int(m.command[1])
-        unban_log_text = f"🔁 unbanning user... \n\n**user id:**{user_id}"
+        unban_log_text = f"🆓 **unbanned user !** \n\n**user id:**{user_id}"
         try:
             await c.send_message(user_id, "🎊 congratulations, you was unbanned!")
             unban_log_text += "\n\n✅ this notification was sent to that user"
@@ -123,9 +122,8 @@ async def unban(c: Client, m: Message):
 
 
 # Blocked User List
-@Client.on_message(
-    filters.private & filters.command("blocklist") & filters.user(OWNER_ID)
-)
+@Client.on_message(filters.private & filters.command("blocklist"))
+@sudo_users_only
 async def _banned_usrs(_, m: Message):
     all_banned_users = await db.get_all_banned_users()
     banned_usr_count = 0
@@ -136,7 +134,7 @@ async def _banned_usrs(_, m: Message):
         banned_on = banned_user["ban_status"]["banned_on"]
         ban_reason = banned_user["ban_status"]["ban_reason"]
         banned_usr_count += 1
-        text += f"⫸ **user id**: `{user_id}`,⫸ **ban duration**: `{ban_duration}`,⫸ **banned date**: `{banned_on}`,⫸ **ban reason**: `{ban_reason}`\n\n"
+        text += f"⫸ **user id**: `{user_id}`\n⫸ **duration**: `{ban_duration}`\n⫸ **banned date**: `{banned_on}`\n⫸ **reason**: `{ban_reason}`\n\n"
     reply_text = f"⫸ **total banned:** `{banned_usr_count}`\n\n{text}"
     if len(reply_text) > 4096:
         with open("banned-user-list.txt", "w") as f:
@@ -265,7 +263,8 @@ def _check_heroku(func):
     return heroku_cli
 
 
-@Client.on_message(command("logs") & filters.user(OWNER_ID))
+@Client.on_message(command("logs"))
+@sudo_users_only
 @_check_heroku
 async def logswen(client: Client, message: Message, happ):
     msg = await message.reply_text("`please wait for a moment!`")

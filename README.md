@@ -1,6 +1,6 @@
-<h2 align="centre">🎵 VEEZ MUSIC BOT</h2>
+## 🎵 VEEZ MUSIC BOT
 
-### Veez Music is a telegram bot project that's allow you to play music on telegram voice chat group.
+Veez Music is a telegram bot project that's allow you to play music on telegram voice chat group.
 
 <p align="center"><a href="https://t.me/VeezMusicBot"><img src="https://telegra.ph/file/8bf3d62837cb59c3f8e7f.png" width="300"></a></p>
 <p align="center">
@@ -18,7 +18,7 @@
 
 - FFmpeg
 - NodeJS [nodesource.com](https://nodesource.com/)
-- Python 3.8 or higher
+- Python 3.7 or higher
 - [PyTgCalls](https://github.com/pytgcalls/pytgcalls)
 - [MongoDB](https://cloud.mongodb.com/)
 
@@ -114,6 +114,7 @@ python3 main.py # Run the bot
 - [Levina](https://github.com/levina-lab): Dev
 - [Tofik](https://github.com/tofikdn): Dev
 - [Zxce3](https://github.com/Zxce3): Dev
+- [Hyoka-XD](https://github.com/PratheekXD) Contributor
 - [Laky](https://github.com/Laky-64) & [Andrew](https://github.com/AndrewLaneX): PyTgCalls
 - [Original Repo](https://github.com/callsmusic/callsmusic) CallsMusic
 - [Veez Music Bot](https://t.me/veezmusicbot) Our Music Bot

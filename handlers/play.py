@@ -5,15 +5,9 @@ from typing import Callable
 
 import aiofiles
 import aiohttp
+import converter
 import ffmpeg
 import requests
-from PIL import Image, ImageDraw, ImageFont
-from pyrogram import Client, filters
-from pyrogram.errors import UserAlreadyParticipant
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from youtube_search import YoutubeSearch
-
-import converter
 from cache.admins import admins as a
 from callsmusic import callsmusic
 from callsmusic.callsmusic import client as USER
@@ -34,6 +28,12 @@ from helpers.channelmusic import get_chat_id
 from helpers.decorators import authorized_users_only
 from helpers.filters import command, other_filters
 from helpers.gets import get_file_name
+from PIL import Image, ImageDraw, ImageFont
+from pyrogram import Client, filters
+from youtube_search import YoutubeSearch
+from helpers.chattitle import CHAT_TITLE
+from pyrogram.errors import UserAlreadyParticipant
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 aiohttpsession = aiohttp.ClientSession()
 chat_id = None
@@ -49,6 +49,7 @@ def cb_admin_check(func: Callable) -> Callable:
         else:
             await cb.answer("💡 only admin can tap this button !", show_alert=True)
             return
+
     return decorator
 
 
@@ -84,7 +85,7 @@ def changeImageSize(maxWidth, maxHeight, image):
     return newImage
 
 
-async def generate_cover(title, thumbnail):
+async def generate_cover(title, thumbnail, ctitle):
     async with aiohttp.ClientSession() as session:
         async with session.get(thumbnail) as resp:
             if resp.status == 200:
@@ -100,10 +101,10 @@ async def generate_cover(title, thumbnail):
     Image.alpha_composite(image5, image6).save("temp.png")
     img = Image.open("temp.png")
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("etc/Roboto-Medium.ttf", 60)
-    font2 = ImageFont.truetype("etc/finalfont.ttf", 75)
-    draw.text((25, 535), "Playing here...", (0, 0, 0), font=font)
-    draw.text((25, 620), f"{title[:25]}...", (0, 0, 0), font=font2)
+    font = ImageFont.truetype("etc/Roboto-Medium.ttf", 55)
+    font2 = ImageFont.truetype("etc/finalfont.ttf", 80)
+    draw.text((20, 528), f"Playing on {ctitle[:10]}", (0, 0, 0), font=font)
+    draw.text((20, 610), f"{title[:20]}...", (0, 0, 0), font=font2)
     img.save("final.png")
     os.remove("temp.png")
     os.remove("background.png")
@@ -113,6 +114,20 @@ async def generate_cover(title, thumbnail):
     command(["playlist", f"playlist@{BOT_USERNAME}"]) & filters.group & ~filters.edited
 )
 async def playlist(client, message):
+    
+    keyboard=InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✨ Group", url=f"https://t.me/{GROUP_SUPPORT}"
+                ),
+                InlineKeyboardButton(
+                    "📣 Channel", url=f"https://t.me/{UPDATES_CHANNEL}"
+                ),
+            ]
+        ]
+    )
+    
     global que
     if message.chat.id in DISABLED_GROUPS:
         return
@@ -136,7 +151,7 @@ async def playlist(client, message):
             usr = song[1].mention(style="md")
             msg += f"\n• {name}"
             msg += f"\n• Req by {usr}\n"
-    await message.reply_text(msg)
+    await message.reply_text(msg, reply_markup=keyboard)
 
 
 # ============================= Settings =========================================
@@ -225,9 +240,7 @@ async def music_onoff(_, message):
             await lel.edit("» **music player already turned on.**")
             return
         DISABLED_GROUPS.remove(message.chat.id)
-        await lel.edit(
-            f"✅ **music player turned on**\n\n💬 `{message.chat.id}`"
-        )
+        await lel.edit(f"✅ **music player turned on**\n\n💬 `{message.chat.id}`")
 
     elif status == "OFF" or status == "off" or status == "Off":
         lel = await message.reply("`processing...`")
@@ -236,9 +249,7 @@ async def music_onoff(_, message):
             await lel.edit("» **music player already turned off.**")
             return
         DISABLED_GROUPS.append(message.chat.id)
-        await lel.edit(
-            f"✅ **music player turned off**\n\n💬 `{message.chat.id}`"
-        )
+        await lel.edit(f"✅ **music player turned off**\n\n💬 `{message.chat.id}`")
     else:
         await message.reply_text(
             "**i'm only know** `/musicplayer on` **and** `/musicplayer off`"
@@ -247,6 +258,25 @@ async def music_onoff(_, message):
 
 @Client.on_callback_query(filters.regex(pattern=r"^(playlist)$"))
 async def p_cb(b, cb):
+    
+    keyboard=InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✨ Group", url=f"https://t.me/{GROUP_SUPPORT}"
+                ),
+                InlineKeyboardButton(
+                    "📣 Channel", url=f"https://t.me/{UPDATES_CHANNEL}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "🔙 Go Back", callback_data="menu"
+                )
+            ],
+        ]
+    )
+    
     global que
     que.get(cb.message.chat.id)
     type_ = cb.matches[0].group(1)
@@ -274,7 +304,7 @@ async def p_cb(b, cb):
                 usr = song[1].mention(style="md")
                 msg += f"\n• {name}"
                 msg += f"\n• Req by {usr}\n"
-        await cb.message.edit(msg)
+        await cb.message.edit(msg, reply_markup=keyboard)
 
 
 @Client.on_callback_query(
@@ -282,6 +312,25 @@ async def p_cb(b, cb):
 )
 @cb_admin_check
 async def m_cb(b, cb):
+    
+    keyboard=InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✨ Group", url=f"https://t.me/{GROUP_SUPPORT}"
+                ),
+                InlineKeyboardButton(
+                    "📣 Channel", url=f"https://t.me/{UPDATES_CHANNEL}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "🔙 Go Back", callback_data="menu"
+                )
+            ],
+        ]
+    )
+    
     global que
     if (
         cb.message.chat.title.startswith("Channel Music: ")
@@ -346,7 +395,7 @@ async def m_cb(b, cb):
                 usr = song[1].mention(style="md")
                 msg += f"\n• {name}"
                 msg += f"\n• Req by {usr}\n"
-        await cb.message.edit(msg)
+        await cb.message.edit(msg, reply_markup=keyboard)
 
     elif type_ == "resume":
         if (chet_id not in callsmusic.pytgcalls.active_calls) or (
@@ -414,9 +463,7 @@ async def m_cb(b, cb):
                 )
                 await cb.answer("skipped")
                 await cb.message.edit((m_chat, qeue), reply_markup=r_ply(the_data))
-                await cb.message.reply_text(
-                    "⏭ **You've skipped to the next song.**"
-                )
+                await cb.message.reply_text("⏭ **You've skipped to the next song.**")
 
     elif type_ == "leave":
         if chet_id in callsmusic.pytgcalls.active_calls:
@@ -439,7 +486,7 @@ async def play(_, message: Message):
     global useer
     if message.chat.id in DISABLED_GROUPS:
         return
-    lel = await message.reply("🔎 **Searching...**")
+    lel = await message.reply("🔎 **searching...**")
     administrators = await get_administrators(message.chat)
     chid = message.chat.id
     try:
@@ -554,6 +601,8 @@ async def play(_, message: Message):
             title = results[0]["title"][:60]
             thumbnail = results[0]["thumbnails"][0]
             thumb_name = f"{title}.jpg"
+            ctitle = message.chat.title
+            ctitle = await CHAT_TITLE(ctitle)
             thumb = requests.get(thumbnail, allow_redirects=True)
             open(thumb_name, "wb").write(thumb.content)
             duration = results[0]["duration"]
@@ -579,7 +628,7 @@ async def play(_, message: Message):
             ]
         )
         message.from_user.first_name
-        await generate_cover(title, thumbnail)
+        await generate_cover(title, thumbnail, ctitle)
         file_path = await converter.convert(youtube.download(url))
     else:
         query = ""
@@ -602,7 +651,7 @@ async def play(_, message: Message):
             emojilist = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
             while j < 5:
                 toxxt += f"{emojilist[j]} [{results[j]['title'][:25]}...](https://youtube.com{results[j]['url_suffix']})\n"
-                toxxt += f" ├ 💡 **Duration** - {results[j]['duration']}\n"
+                toxxt += f" ├ 💡 **Duration** - `{results[j]['duration']}`\n"
                 toxxt += f" └ ⚡ __Powered by {BOT_NAME} AI__\n\n"
                 j += 1
             keyboard = InlineKeyboardMarkup(
@@ -646,6 +695,8 @@ async def play(_, message: Message):
                 title = results[0]["title"][:60]
                 thumbnail = results[0]["thumbnails"][0]
                 thumb_name = f"{title}.jpg"
+                ctitle = message.chat.title
+                ctitle = await CHAT_TITLE(ctitle)
                 thumb = requests.get(thumbnail, allow_redirects=True)
                 open(thumb_name, "wb").write(thumb.content)
                 duration = results[0]["duration"]
@@ -671,7 +722,7 @@ async def play(_, message: Message):
                 ]
             )
             message.from_user.first_name
-            await generate_cover(title, thumbnail)
+            await generate_cover(title, thumbnail, ctitle)
             file_path = await converter.convert(youtube.download(url))
     chat_id = get_chat_id(message.chat)
     if chat_id in callsmusic.pytgcalls.active_calls:
@@ -757,6 +808,8 @@ async def lol_cb(b, cb):
         pass
     try:
         thumb_name = f"{title}.jpg"
+        ctitle = cb.message.chat.title
+        ctitle = await CHAT_TITLE(ctitle)
         thumb = requests.get(thumbnail, allow_redirects=True)
         open(thumb_name, "wb").write(thumb.content)
     except Exception as e:
@@ -771,7 +824,7 @@ async def lol_cb(b, cb):
             [InlineKeyboardButton("📣 ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/{UPDATES_CHANNEL}")],
         ]
     )
-    await generate_cover(title, thumbnail)
+    await generate_cover(title, thumbnail, ctitle)
     file_path = await converter.convert(youtube.download(url))
     if chat_id in callsmusic.pytgcalls.active_calls:
         position = await queues.put(chat_id, file=file_path)
@@ -882,7 +935,7 @@ async def ytplay(_, message: Message):
         query += " " + str(i)
     print(query)
     await lel.edit("🔄 **connecting to vc...**")
-    ydl_opts = {"format": "bestaudio/best"}
+    ydl_opts = {"format": "bestaudio[ext=m4a]"}
     try:
         results = YoutubeSearch(query, max_results=1).to_dict()
         url = f"https://youtube.com{results[0]['url_suffix']}"
@@ -890,6 +943,8 @@ async def ytplay(_, message: Message):
         title = results[0]["title"][:60]
         thumbnail = results[0]["thumbnails"][0]
         thumb_name = f"{title}.jpg"
+        ctitle = message.chat.title
+        ctitle = await CHAT_TITLE(ctitle)
         thumb = requests.get(thumbnail, allow_redirects=True)
         open(thumb_name, "wb").write(thumb.content)
         duration = results[0]["duration"]
@@ -922,14 +977,14 @@ async def ytplay(_, message: Message):
             ],
             [
                 InlineKeyboardButton(
-                    "📣 ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/{UPDATES_CHANNEL}"),
-                InlineKeyboardButton(
-                    "✨ ɢʀᴏᴜᴘ", url=f"https://t.me/{GROUP_SUPPORT}"),
+                    "📣 ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/{UPDATES_CHANNEL}"
+                ),
+                InlineKeyboardButton("✨ ɢʀᴏᴜᴘ", url=f"https://t.me/{GROUP_SUPPORT}"),
             ],
         ]
     )
     message.from_user.first_name
-    await generate_cover(title, thumbnail)
+    await generate_cover(title, thumbnail, ctitle)
     file_path = await converter.convert(youtube.download(url))
     chat_id = get_chat_id(message.chat)
     if chat_id in callsmusic.pytgcalls.active_calls:
